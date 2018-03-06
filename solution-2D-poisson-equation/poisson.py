@@ -35,13 +35,19 @@ if __name__=="__main__":
 	meanK=mean_kernel()
 	laplaceK=laplace_kernel()
 	imgL=cv2.filter2D(src,-1,laplaceK)
-	imgGauss=cv2.GaussianBlur(src,(3,3),0)
+	imgGauss=cv2.GaussianBlur(src,(201,201),0)
 	imgNoise=np.random.uniform(0,256,src.shape)
+	cv2.imwrite('noise.jpg',imgNoise)
+	cv2.imwrite('laplace.jpg',imgL)
+	cv2.imwrite('gauss.jpg',imgGauss)
+	
 
-	for i in range(30):
+	for i in range(10):
 		imgNoise=OpIterate(imgNoise)
+		print('generate image noise_%d.jpg'%i)
 		cv2.imwrite('img/noise_%d.jpg'%i,imgNoise)
 
-	for i in range(30):
+	for i in range(10):
 		imgGauss=OpIterate(imgGauss)
+		print('generate image gauss_%d.jpg'%i)
 		cv2.imwrite('img/gauss_%d.jpg'%i,imgGauss)
