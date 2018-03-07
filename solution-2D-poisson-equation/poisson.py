@@ -43,11 +43,11 @@ if __name__=="__main__":
 	
 
 	for i in range(10):
-		imgNoise=OpIterate(imgNoise)
+		imgNoise=OpIterate(imgNoise,10)
 		print('generate image noise_%d.jpg'%i)
 		cv2.imwrite('img/noise_%d.jpg'%i,imgNoise)
 
 	for i in range(10):
-		imgGauss=OpIterate(imgGauss)
+		imgGauss=OpIterate(imgGauss,10)
 		print('generate image gauss_%d.jpg'%i)
 		cv2.imwrite('img/gauss_%d.jpg'%i,imgGauss)
