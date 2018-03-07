@@ -3,8 +3,17 @@ import cv2
 import numpy as np
 
 if __name__=='__main__':
-	U=np.random.uniform(0,256,[500,500,3])
-	V=np.random.uniform(0,256,[500,500,3])
+	U=np.zeros([500,500,3])
+	V=np.zeros([500,500,3])
+	
+	for i in range(200,240):
+		for j in range(200,240):
+			U[i,j,1]=200
+	
+	for i in range(260,300):
+		for j in range(260,300):
+			U[i,j,0]=200
+
 	w=1.
 	dt=1e-3
 
