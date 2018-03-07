@@ -7,7 +7,7 @@ if __name__=='__main__':
 	U=np.zeros([200,200,3])
 	V=np.zeros([200,200,3])
 
-	r=1e-1
+	r=0.1
 	dt=0.01
 	
 	for i in range(1000):
