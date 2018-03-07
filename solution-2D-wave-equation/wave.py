@@ -1,27 +1,22 @@
 #coding=utf-8
 import cv2
 import numpy as np
+from math import sin,cos
 
 if __name__=='__main__':
-	U=np.zeros([500,500,3])
-	V=np.zeros([500,500,3])
-	
-	for i in range(200,240):
-		for j in range(200,240):
-			U[i,j,1]=200
-	
-	for i in range(260,300):
-		for j in range(260,300):
-			U[i,j,0]=200
+	U=np.zeros([200,200,3])
+	V=np.zeros([200,200,3])
 
-	w=1.
-	dt=1e-3
-
+	r=1e-1
+	dt=0.01
+	
 	for i in range(1000):
-		Unew = U + V*dt
-		Vnew = V + cv2.Laplacian(U,cv2.CV_32F,ksize = 5)*dt/w**2
-		U=Unew
+		A = cv2.Laplacian(U,-1,ksize=5)-r*V
+		A[103:105,103:105,int(i/400)%3]+=128*sin(i/10)
+		U += V*dt
+		V += A*dt
 		if i%100==0:
+			print(i)
 			cv2.imwrite('U/%d.jpg'%i,U)
 			cv2.imwrite('V/%d.jpg'%i,V)
 	

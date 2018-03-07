@@ -1,18 +1,20 @@
 #解二维波动方程
 什么是波动方程？
 波动方程的一般表达式为：
-	Laplace(U(x,y))-w^2*Utt=0
+	Laplace(U(x,y))-w^2*Utt-r*Ut=f(x,y,t)
 	二维Laplace算子的表达式为:
 	Laplace(U) => Uxx+Uyy
 	U=U(x,y,t)表示波在（x,y）位置在t时刻的相对与平衡位置的位移。
-	Utt表示函数U关于时间变量的二阶偏微分
-	该方程等价与方程组：
+	Utt表示函数U关于时间变量的二阶偏导数
+	Ut表示U关于时间的一阶偏导数
+	f(x,y,t)表示收到外界的扰动力
+	r：表示波动的阻滞力系数。
 
 Qidea:
-	Vt=Laplace(U)/w^2
+	Vt=Laplace(U)/w^2-rUt-f(x,y,t)
 	Ut=V
 	二阶偏微分方程变成了一阶偏微分方程组,可以使用龙哥库塔法进行迭代求解。
 利用龙哥库塔法进行迭代:
 	U_n+1 = U_n + Vn*dt
-	V_n+1 = V_n + Laplace(U_n)*dt
+	V_n+1 = V_n + [Laplace(U_n) - r*Ut_n - f(x,y,t_n)]*dt
 	
