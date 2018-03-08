@@ -13,9 +13,16 @@ class PLAYER():
 		self.id=id
 		self.see_card=False
 		self.cards=[]
-	def see_card():
+	def see_card(self):
 		self.see_card=True
 
+	#游戏结束后进行反省
+	def rethink(self):
+		pass
+
+	def.choose_action(self):
+		return random.randint(0,14)
+		
 class GAME():
 	def __init__(self,nPlayers,nMaxLoop=10):
 		self.nPlayers=nPlayers
@@ -28,8 +35,9 @@ class GAME():
 			for j in range(13):
 				cards.append(CARD(i,j))
 		random.shuffle(cards)
-		self.action_history=[]
-		self.actions=[
+		self.action_history=[] #动作的历史记录
+		self.
+		self.actions=[  #可选动作
 		'none',
 		'see_cards',
 		'give_up',
@@ -95,9 +103,14 @@ class GAME():
 				self.out(p)
 			if a==2:#选择弃牌
 				self.out(p)
-			if a in range(3,9):#选择比牌操作，但不能选择比牌对象是自身
+			if a in range(3,9):#选择比牌操作，但不能选择比牌对象是自身或淘汰的玩家
 				compare_id=a-3
-				if p.id==compare_id:
+				pCp=None
+				for p1 in range(self.players):
+					if p1.id==p.id:
+						pCp=p1
+						break
+				if p.id==compare_id or pCp=None:
 					#违反规则给与惩罚，并且该玩家出局
 					self.push_reward(p,-10)
 					self.out(p)
@@ -118,14 +131,32 @@ class GAME():
 
 	#摊牌操作，所有玩家都亮出底牌，比较大小后给与奖励后游戏结束
 	def showhand(self):
-		pass
-
+		p=self.players.pop()
+		while len(self.players)>0:
+			maxSize=0
+			cnt_winners=0
+			for p in players():
+				maxSize=maxSize if maxSize>self.size(p.cards) else self.size(p.cards)
+			for p in self.players:
+				if self.size(p.cards)==maxSize:
+					cnt_winners+=1
+			for p in self.players:
+				if self.size(p.cards)==maxSize:
+					self.reward(p,reward_pool/cnt_winners)
+			while len(self.players)>0:
+				p=self.players.pop()
+				self.out_players.append(p)
+		
 	#游戏结束
 	def game_over(self):
 		#将奖池中累积的奖励统统奖励给胜者，游戏结束
 		assert(len(self.players)==1)
 		p=self.player.pop()
 		self.reward(p,self.reward_pool)
+		self.out_players.append(p)
+		for p in out_players():
+			#每个玩家在游戏结束后根据所有已知的信息进行反省，对策略参数进行调整
+			p.rethink()
 
 	def play(self):
 		#清空奖励池
@@ -144,8 +175,7 @@ class GAME():
 			if 'game_over' == self.gambling_2(i):
 				self.game_over()
 			
-		
-				
-			
-				
-		
+
+if __name__=='__main__':
+	game=GAME()
+	game.play()	
