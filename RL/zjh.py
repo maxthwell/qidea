@@ -16,7 +16,8 @@ class PLAYER():
 	def see_card(self):
 		self.see_card=True
 
-	#游戏结束后进行反省
+	#游戏结束后进行反省,修改策略参数，以期使自身获取更多的累积奖励
+	#修改价值网络参数，使得td-error达到最小。
 	def rethink(self):
 		pass
 
