@@ -1,4 +1,10 @@
 #coding=utf-8
+'''
+这是一个用PPO算法玩一个平衡杆游戏。其动作空间是连续的，更新方法为回合更新，而且奖励信息也是可以实时获得的。
+相较于这个游戏，扎金花更加简单，其动作空间只有15个离散的值，游戏的步数不到二十步，完全可以一直玩到结束，得到最终的累积回报，而不必使用衰减法进行估算。
+'''
+
+
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
