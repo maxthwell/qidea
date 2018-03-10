@@ -102,7 +102,7 @@ MCTS                     由于围棋可以使用rollout对策略进行提升   
 			Trail={(s0,a0),(s1,a1),(s2,a2),(s3,a3).....(sT,aT)}
 			完成一局游戏后的收益为R。
 			则theata的更新方式如下:
-			theata += alpha * sum(DELTA_theata(PI(ai|si,theata)) * R)
+			theata += alpha * sum(DELTA_theata(log(PI(ai|si,theata))) * R)
 			alpha为学习率
 			为了提高学习率，可以将alpha设置一个比较大的数，但又需要控制策略更新的幅度，所以一般加上一个损失项KL(PI_old,PI_new)
 			KL表示两个分布的KL散度，用于衡量两个概率分布的差异。
@@ -114,7 +114,7 @@ MCTS                     由于围棋可以使用rollout对策略进行提升   
 				play games for M times use PI_old, will get some trails for all player => {trails}
 				for trail_k in {trails} do
 					#利用策略梯度法，向着能获取到最大期望收益的方向做出调整。
-					delta_theata += sum(DELTA_theata(PI(ai|si,theata)) * Rk)
+					delta_theata += sum(DELTA_theata(R_k*log(PI(ai|si,theata))))
 					s.b. to (ai,si) in trail_k ; theata = theata_old
 				end for
 				theata_new = theata_old + alpha * delta_theata/(M*count(players))
