@@ -113,12 +113,13 @@ MCTS                     由于围棋可以使用rollout对策略进行提升   
 				#利用所有玩家使用PI_old策略玩的M局游戏构成的样本进行学习，修改策略参数
 				play games for M times use PI_old, will get some trails for all player => {trails}
 				for trail_k in {trails} do
-					delta_theata += sum(DELTA_theata(PI(ai|si,theata)) * Rk)      #利用策略梯度法，向着能获取到最大期望收益的方向做出调整。		
+					#利用策略梯度法，向着能获取到最大期望收益的方向做出调整。
+					delta_theata += sum(DELTA_theata(PI(ai|si,theata)) * Rk)
 					s.b. to (ai,si) in trail_k ; theata = theata_old
 				end for
 				theata_new = theata_old + alpha * delta_theata/(M*count(players))
 				#利用如果调整幅度过大，进行相应的惩罚,降低调整前后的两个策略的KL距离。
-				theata_new -= belta * DELTA_theata*(KL(PI(a|si,theata_old),PI(a|si,theata)))  #利用如果调整幅度过大，需要进行相应的惩罚，使调整的幅度变小一点
+				theata_new -= belta * DELTA_theata(KL(PI(a|si,theata_old),PI(a|si,theata)))
 				s.b. to theata = theata_new
 			end for
 
