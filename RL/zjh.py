@@ -144,6 +144,7 @@ class GAME():
 			for p in self.players:
 				if self.size(p.cards)==maxSize:
 					self.reward(p,reward_pool/cnt_winners)
+					p.rethink()
 			while len(self.players)>0:
 				p=self.players.pop()
 				self.out_players.append(p)
