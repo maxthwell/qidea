@@ -8,6 +8,10 @@ class CARD():
 		self._size=_size
 	def __str__(self):
 		return '[type:%s,size:%s]'%(self._type,self._size)	
+	def __cmp__(self,s):
+		if self._size<s._size:
+			return -1
+		return 1 if self._size>s._size else 0
 
 class PLAYER():
 	def __init__(self,id):
@@ -16,6 +20,7 @@ class PLAYER():
 		self.see_card=False
 		self.cards=[]
 		self.money=0
+		self.alive=True
 	def seecard(self):
 		self.see_card=True
 	#游戏结束后进行反省,修改策略参数，以期使自身获取更多的累积奖励
@@ -25,14 +30,36 @@ class PLAYER():
 		return random.randint(0,14)
 	def handle_reward(self,money):
 		self.money+=money
+	def size(self):
+		c=self.cards
+		if c[0]._size==c[1]._size and c[1]._size==c[2]._size:
+			return 60000+c[0]._size
+		if c[0]._type==c[1]._type and c[1]._type==c[2]._type:
+			if c[2]._size==c[1]._size+1 and c[1]._size==c[0]._size+1:
+				return 50000+c[0]._size
+			return 40000+c[0]._size+c[1]._size*13+c[2]._size*13*13
+		if c[2]._size==c[1]._size+1 and c[1]._size==c[0]._size+1:
+			return 30000+c[0]._size
+		if c[0]._size==c[1]._size:
+			return 20000+c[1]._size*100+c[2]._size
+		if c[1]==c[2]:
+			return 20000+c[1]._size*100+c[0]._size
+		if c[0]._size==2 and c[1]._size==3 and c[2]._size==5:
+			return 235
+		return 10000+c[0]._size+c[1]._size*13+c[2]._size*13*13	
+	
+	def __cmp__(self,s):
+		if self.size()<s.size():
+			return -1
+		return 1 if self.size()>s.size() else 0
+		
 	def output(self):
-		print('playerid=>',self.id,'cards=>',[str(card) for card in self.cards],'money=>',self.money)
+		print('playerid=>',self.id,'cards=>',[str(card) for card in self.cards],'money=>',self.money,'size=>',self.size(),'alive=>',self.alive)
 
 class GAME():
 	def __init__(self,nPlayers,max_epoch=10):
 		self.nPlayers=nPlayers
 		self.players=[PLAYER(id) for id in range(nPlayers)]	#保存未淘汰的用户
-		self.out_players=[]  #保存淘汰掉的用户
 		self.cards=[]	     #保存扑克牌
 		self.reward_pool=0   #当前奖池累积
 		self.min_add_money=1 #最小加注数
@@ -43,7 +70,7 @@ class GAME():
 		random.shuffle(self.cards)
 		self.action_history=[] #动作的历史记录
 		self.actions=[  #可选动作
-		'none',
+		'no_see',
 		'see_cards',
 		'give_up',
 		'compare_0',
@@ -63,15 +90,21 @@ class GAME():
 	#发牌操作
 	def deal(self):
 		for i in range(3):
-			for player in self.players[:]:
+			for p in self.players:
 				card=self.cards.pop()
-				player.cards.append(card)
+				p.cards.append(card)
+		for p in self.players:
+			p.cards.sort()
 	#淘汰一个玩家
 	def out(self,p):
-		self.players.remove(p)
-		self.out_players.append(p)
-
+		p.alive=False
 	
+	def alive_players(self):
+		ap=0
+		for p in self.players:
+			if p.alive:
+				ap+=1
+		return ap	
 	#加注操作,每执行一次加注操作用户的钱就暂时损失一笔钱
 	def add_money(self,p,money):
 		self.reward(p,-1*money)
@@ -84,12 +117,11 @@ class GAME():
 
 	#选择看牌阶段
 	def gambling_1(self,epoch):
-		for p in self.players[:]:
-			if p not in self.players:
+		for p in self.players:
+			if not p.alive:
 				continue
-			if len(self.players)==1:
-				return 'game_over'
 			a=p.choose_action()
+			self.action_history.append([p.id,a])
 			if a>1: #不允许执行除看牌或无操作以外的操作
 				self.reward(p,-10)
 				self.out(p)
@@ -99,16 +131,14 @@ class GAME():
 					self.out(p)
 				else:
 					p.seecard()
-			self.action_history.append([p.id,a])
+			if self.alive_players()<=1:
+				return 'over'
 
 	#选择加注、比牌、弃牌阶段
 	def gambling_2(self,epoch):
-		for p in self.players[:]:
-			if p not in self.players:
+		for p in self.players:
+			if not p.alive:
 				continue
-			#玩家数量只剩下一个人，游戏结束
-			if len(self.players)==1:
-				return 'game_over'
 			a=p.choose_action()
 			if a==0 or a==1:#必须要操作，并且不是看牌操作
 				#违反规则给与惩罚，并且该玩家出局
@@ -123,7 +153,7 @@ class GAME():
 					if p1.id==compare_id:
 						pCp=p1
 						break
-				if p.id==compare_id or pCp==None:
+				if p.id==compare_id or not pCp:
 					#违反规则给与惩罚，并且该玩家出局
 					self.reward(p,-10)
 					self.out(p)
@@ -139,6 +169,8 @@ class GAME():
 					self.out(p)
 			#加入到游戏的动作历史集中，作为游戏状态的一个属性。
 			self.action_history.append([p.id,a])
+			if self.alive_players()<=1:
+				return 'over'
 	
 	#比牌操作
 	def compare(self,p1,p2):
@@ -149,41 +181,28 @@ class GAME():
 		else:
 			self.out(p1)
 
+
 	#摊牌操作，所有玩家都亮出底牌，比较大小后给与奖励后游戏结束
 	def showhand(self):
-		while len(self.players)>0:
-			maxSize=0
-			cnt_winners=0
-			for p in players():
-				maxSize=maxSize if maxSize>self.size(p.cards) else self.size(p.cards)
-			for p in self.players[:]:
-				if self.size(p.cards)==maxSize:
-					cnt_winners+=1
-			for p in self.players[:]:
-				if self.size(p.cards)==maxSize:
-					self.reward(p,reward_pool/cnt_winners)
-					p.rethink()
-			while len(self.players)>0:
-				p=self.players.pop()
-				self.out_players.append(p)
-		
-	#游戏结束
-	def game_over(self):
-		#将奖池中累积的奖励统统奖励给胜者，游戏结束
-		assert(len(self.players)==1)
-		p=self.players.pop()
-		self.reward(p,self.reward_pool)
-		self.out_players.append(p)
-		for p in self.out_players:
-			#每个玩家在游戏结束后根据所有已知的信息进行反省，对策略参数进行调整
-			p.rethink()
+		maxSize=0
+		for p in self.players:
+			if p.alive and maxSize <p.size():
+				maxSize=p.size()
+		for p in self.players:
+			if p.alive and p.size()<maxSize:
+				self.out(p)
+		ap=self.alive_players()
+		for p in self.players:
+			if p.alive and p.size()==maxSize:
+				self.reward(p,self.reward_pool/ap)
+				p.rethink()
 
 	def play(self):
 		#清空奖励池
 		self.reward_pool=0
 		#洗牌、发牌、押底
 		self.deal()
-		for p in self.players[:]:
+		for p in self.players:
 			self.reward(p,-1)
 		#玩家开始轮流操作
 		for epoch in range(self.max_epoch+1):
@@ -191,15 +210,14 @@ class GAME():
 			if epoch==self.max_epoch:
 				return self.showhand()
 			#选择是否看牌操作
-			self.gambling_1(epoch)
 			#选择加注、比牌、弃牌
-			if 'game_over' == self.gambling_2(epoch):
-				return self.game_over()
+			if 'over'==self.gambling_1(epoch) or 'over'==self.gambling_2(epoch):
+				return self.showhand()
 			
 	def output(self):
 		print('reward_pool:',self.reward_pool)
 		print('players:')
-		for p in self.players+self.out_players:
+		for p in self.players:
 			p.output()
 		print('actions:')
 		for a in self.action_history:
