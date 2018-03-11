@@ -228,7 +228,7 @@ class GAME():
 		print('')
 
 if __name__=='__main__':
-	for i in range(10000):
+	for i in range(100):
 		game=GAME(nPlayers=6)
 		game.play()
 		print('game %d'%i)
