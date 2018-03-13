@@ -94,7 +94,7 @@ class GAME():
 				card=self.cards.pop()
 				p.cards.append(card)
 		for p in self.players:
-			p.cards.sort()
+			p.cards.sort(key=lambda s:s._size)
 	#淘汰一个玩家
 	def out(self,p):
 		p.alive=False
@@ -176,7 +176,7 @@ class GAME():
 	def compare(self,p1,p2):
 		#比牌者必须拿出两倍的最小加注数放入奖池
 		self.reward(p1,-1*self.min_add_money*2)
-		if p1>p2:
+		if p1.size()>p2.size():
 			self.out(p2)
 		else:
 			self.out(p1)
