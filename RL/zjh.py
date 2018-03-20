@@ -66,13 +66,14 @@ class GAME():
 		self.reward_pool=0   #当前奖池累积
 		self.min_add_money=1 #最小加注数
 		self.max_epoch=max_epoch
+		self.cur_pid=0
+		self.epoch=0
+		self.actions=np.zeros([20,2,6])
 		for i in range(4):
 			for j in range(13):
 				self.cards.append(CARD(i,j))
 		random.shuffle(self.cards)
 		self.action_history=[] #动作的历史记录
-		self.epoch=0
-		self.cur_pid=0
 		self.actions=[  #可选动作
 		'no_see',
 		'see_cards',
@@ -109,7 +110,7 @@ class GAME():
 			if p.alive:
 				ap+=1
 		return ap	
-	#加注操作,每执行一次加注操作用户的钱就暂时损失一笔钱
+	#加注操作,每执行一次加注操作用户就暂时损失一笔钱
 	def add_money(self,p,money):
 		self.reward(p,-1*money)
 
@@ -120,9 +121,8 @@ class GAME():
 		return p.id,money
 
 	#选择看牌阶段
-	def gambling_1(self):
+	def gambling_1(self,epoch):
 		for p in self.players:
-			self.cur_pid=p.id
 			if not p.alive:
 				continue
 			a=p.choose_action()
@@ -141,9 +141,8 @@ class GAME():
 				return 'over'
 
 	#选择加注、比牌、弃牌阶段
-	def gambling_2(self):
+	def gambling_2(self,epoch):
 		for p in self.players:
-			self.cur_pid=p.id
 			if not p.alive:
 				continue
 			a=p.choose_action()
@@ -214,9 +213,9 @@ class GAME():
 			self.reward(p,-1)
 		#玩家开始轮流操作
 		for self.epoch in range(self.max_epoch):
-			self.step()
-			#选择是否看牌操作,选择加注、比牌、弃牌
-			if 'over'==self.gambling_1() or 'over'==self.gambling_2():
+			print(game.spectrum())	
+			#选择加注、比牌、弃牌
+			if 'over'==self.gambling_1(self.epoch) or 'over'==self.gambling_2(self.epoch):
 				return self.showhand()
 		return self.showhand()
 			
@@ -231,35 +230,30 @@ class GAME():
 			pid=a[0]
 			aid=a[1]
 			print('player:%s %s'%(pid,self.actions[aid]))
-		print('')
 
-	def step(self):
-		game_state=np.zeros(22)
-		game_state[0]=self.reward_pool
-		game_state[1]=self.min_add_money
-		game_state[2+self.epoch]=1
+	def spectrum(self):
 		player_state=np.zeros([6,30])
 		alive=player_state[:,0]
 		isme=player_state[:,1]
 		money=player_state[:,2]
 		last_action=player_state[:,3:18]
 		cards=np.reshape(player_state[:,18:30],[6,3,4])
-		isme[self.cur_pid]=1
 		for p in self.players:
-			alive[p.id]=p.alive
+			alive[p.id]= 1 if p.alive else 0
+			isme[p.id]=1 if p.id==self.cur_pid else 0
 			money[p.id]=p.money
-			last_action[p.id,p.last_action]=1
+			last_action[p.id]=p.last_action
 			for i in range(3):
 				cards[p.id,i,p.cards[i]._type]=p.cards[i]._size
-		#print(game_state)
-		#print(player_state)
+		game_state=np.zeros(20+1+1)
+		game_state[0]=self.reward_pool
+		game_state[1]=self.min_add_money
+		game_state[2+self.epoch]=1
 		return game_state,player_state
-			
-			
-	
+				
 if __name__=='__main__':
-	for i in range(100):
+	for i in range(1):
 		game=GAME(nPlayers=6)
 		game.play()
 		print('game %d'%i)
-		game.replay()	
+		game.replay()
