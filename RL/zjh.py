@@ -1,5 +1,6 @@
 #coding=utf-8
 import random
+import numpy as np
 class CARD():
 	def __init__(self,_type,_size):
 		assert (_type in range(4))
@@ -21,6 +22,7 @@ class PLAYER():
 		self.cards=[]
 		self.money=0
 		self.alive=True
+		self.last_action=0
 	def seecard(self):
 		self.see_card=True
 	#游戏结束后进行反省,修改策略参数，以期使自身获取更多的累积奖励
@@ -69,6 +71,8 @@ class GAME():
 				self.cards.append(CARD(i,j))
 		random.shuffle(self.cards)
 		self.action_history=[] #动作的历史记录
+		self.epoch=0
+		self.cur_pid=0
 		self.actions=[  #可选动作
 		'no_see',
 		'see_cards',
@@ -116,12 +120,12 @@ class GAME():
 		return p.id,money
 
 	#选择看牌阶段
-	def gambling_1(self,epoch):
+	def gambling_1(self):
 		for p in self.players:
+			self.cur_pid=p.id
 			if not p.alive:
 				continue
 			a=p.choose_action()
-			self.action_history.append([p.id,a])
 			if a>1: #不允许执行除看牌或无操作以外的操作
 				self.reward(p,-10)
 				self.out(p)
@@ -131,12 +135,15 @@ class GAME():
 					self.out(p)
 				else:
 					p.seecard()
+			self.action_history.append([p.id,a])
+			p.last_action=a
 			if self.alive_players()<=1:
 				return 'over'
 
 	#选择加注、比牌、弃牌阶段
-	def gambling_2(self,epoch):
+	def gambling_2(self):
 		for p in self.players:
+			self.cur_pid=p.id
 			if not p.alive:
 				continue
 			a=p.choose_action()
@@ -169,6 +176,7 @@ class GAME():
 					self.out(p)
 			#加入到游戏的动作历史集中，作为游戏状态的一个属性。
 			self.action_history.append([p.id,a])
+			p.last_action=a
 			if self.alive_players()<=1:
 				return 'over'
 	
@@ -205,16 +213,14 @@ class GAME():
 		for p in self.players:
 			self.reward(p,-1)
 		#玩家开始轮流操作
-		for epoch in range(self.max_epoch+1):
-			#到达轮数上限
-			if epoch==self.max_epoch:
+		for self.epoch in range(self.max_epoch):
+			self.step()
+			#选择是否看牌操作,选择加注、比牌、弃牌
+			if 'over'==self.gambling_1() or 'over'==self.gambling_2():
 				return self.showhand()
-			#选择是否看牌操作
-			#选择加注、比牌、弃牌
-			if 'over'==self.gambling_1(epoch) or 'over'==self.gambling_2(epoch):
-				return self.showhand()
+		return self.showhand()
 			
-	def output(self):
+	def replay(self):
 		print('reward_pool:',self.reward_pool)
 		print('players:')
 		for p in self.players:
@@ -227,9 +233,33 @@ class GAME():
 			print('player:%s %s'%(pid,self.actions[aid]))
 		print('')
 
+	def step(self):
+		game_state=np.zeros(22)
+		game_state[0]=self.reward_pool
+		game_state[1]=self.min_add_money
+		game_state[2+self.epoch]=1
+		player_state=np.zeros([6,30])
+		alive=player_state[:,0]
+		isme=player_state[:,1]
+		money=player_state[:,2]
+		last_action=player_state[:,3:18]
+		cards=np.reshape(player_state[:,18:30],[6,3,4])
+		isme[self.cur_pid]=1
+		for p in self.players:
+			alive[p.id]=p.alive
+			money[p.id]=p.money
+			last_action[p.id,p.last_action]=1
+			for i in range(3):
+				cards[p.id,i,p.cards[i]._type]=p.cards[i]._size
+		#print(game_state)
+		#print(player_state)
+		return game_state,player_state
+			
+			
+	
 if __name__=='__main__':
 	for i in range(100):
 		game=GAME(nPlayers=6)
 		game.play()
 		print('game %d'%i)
-		game.output()	
+		game.replay()	
