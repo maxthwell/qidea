@@ -121,7 +121,7 @@ class GAME():
 		return p.id,money
 
 	#选择看牌阶段
-	def gambling_1(self,epoch):
+	def gambling_1(self):
 		for p in self.players:
 			if not p.alive:
 				continue
@@ -141,7 +141,7 @@ class GAME():
 				return 'over'
 
 	#选择加注、比牌、弃牌阶段
-	def gambling_2(self,epoch):
+	def gambling_2(self):
 		for p in self.players:
 			if not p.alive:
 				continue
@@ -215,7 +215,7 @@ class GAME():
 		for self.epoch in range(self.max_epoch):
 			print(game.spectrum())	
 			#选择加注、比牌、弃牌
-			if 'over'==self.gambling_1(self.epoch) or 'over'==self.gambling_2(self.epoch):
+			if 'over'==self.gambling_1() or 'over'==self.gambling_2():
 				return self.showhand()
 		return self.showhand()
 			
@@ -245,7 +245,7 @@ class GAME():
 			last_action[p.id]=p.last_action
 			for i in range(3):
 				cards[p.id,i,p.cards[i]._type]=p.cards[i]._size
-		game_state=np.zeros(20+1+1)
+		game_state=np.zeros(22)
 		game_state[0]=self.reward_pool
 		game_state[1]=self.min_add_money
 		game_state[2+self.epoch]=1
