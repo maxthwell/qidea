@@ -29,5 +29,5 @@ tensorflow==1.4.1
 tensorflow-tensorboard==0.4.0rc3
 ufw==0.35
 unattended-upgrades==0.1
-urllib3==1.13.1
+urllib3==1.26.5
 Werkzeug==0.14.1
