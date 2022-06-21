@@ -9,7 +9,7 @@ html5lib==0.9999999
 language-selector==0.1
 Markdown==2.6.11
 matplotlib==2.1.2
-numpy==1.14.0
+numpy==1.22.0
 opencv-python==3.4.0.12
 Pillow==5.0.0
 protobuf==3.5.1
